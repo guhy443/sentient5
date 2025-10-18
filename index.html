@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧠 SentientAGI — Day 8 Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(120deg, #f6f8fa, #e9f1ff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 700px;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .start-page, .quiz-page, .result-page {
+      display: none;
+    }
+    .active { display: block; }
+    button {
+      padding: 10px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+      transition: background 0.3s;
+    }
+    button:hover { background: #2980b9; }
+    .question { margin: 20px 0; text-align: left; }
+    .options { margin-top: 10px; }
+    .option {
+      margin: 8px 0;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .option:hover { background: #ecf0f1; }
+    .answer { margin-top: 10px; font-weight: bold; color: #27ae60; }
+    .timer { font-weight: bold; font-size: 18px; margin-top: 10px; color: #e74c3c; }
+    .progress-bar {
+      width: 100%;
+      background: #ecf0f1;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress {
+      height: 10px;
+      background: #3498db;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Start Page -->
+    <div class="start-page active">
+      <h1>🧠 SentientAGI — Day 8 Quiz</h1>
+      <p>Test your knowledge! 10 questions, 10 seconds each.</p>
+      <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Page -->
+    <div class="quiz-page">
+      <div class="progress-bar"><div class="progress" id="progress"></div></div>
+      <div class="timer" id="timer">Time Left: 10s</div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <button id="showAnswerBtn" style="margin-top:15px; display:none;" onclick="showAnswer()">Show Answer</button>
+      <div class="answer" id="answer"></div>
+    </div>
+
+    <!-- Result Page -->
+    <div class="result-page">
+      <h1>🎉 Quiz Completed!</h1>
+      <p>Your Score: <span id="score"></span>/10</p>
+      <button onclick="restartQuiz()">Try Again</button>
+    </div>
+
+  </div>
+
+  <script>
+    const quizData = [
+      {q: "What is the core purpose of the SentientAGI project?", options: ["To build self-replicating AI robots", "To study quantum mechanics", "To design ethical, community-driven AGI", "To replace human jobs"], answer: 2},
+      {q: "Which principle defines “Transparent Intelligence”?", options: ["Hidden model weights", "Explainable decision processes", "Randomized data streams", "Encrypted memory"], answer: 1},
+      {q: "What does “Neural Alignment” aim to achieve?", options: ["Matching AGI goals with human values", "Maximizing compute efficiency only", "Hiding AI thoughts", "Reducing storage"], answer: 0},
+      {q: "Which element helps AGI learn responsibly from humans?", options: ["Bias injection", "Reinforcement with ethical feedback", "Randomized datasets", "Hidden reward loops"], answer: 1},
+      {q: "What is “Synthetic Empathy”?", options: ["Fake emotions for marketing", "Machine ability to model emotional context", "Deleting all emotional data", "Noise filtering algorithm"], answer: 1},
+      {q: "Why does SentientAGI encourage open collaboration?", options: ["To prevent centralized control and bias", "To speed up competition", "To limit creativity", "To sell data"], answer: 0},
+      {q: "What does the “Neural Ledger” track in AGI ecosystems?", options: ["Energy usage", "Time of queries", "Knowledge provenance and trust history", "Password logs"], answer: 2},
+      {q: "What is the danger of unaligned AGI evolution?", options: ["Ethical drift and unpredictable behavior", "Faster learning", "Reduced latency", "Better privacy"], answer: 0},
+      {q: "How can humans co-train with AGI safely?", options: ["By sharing emotional datasets", "Through guided reinforcement and oversight", "Through competition challenges", "By giving it full autonomy immediately"], answer: 1},
+      {q: "What represents the long-term vision of SentientAGI?", options: ["Total automation", "Profit maximization", "Closed-source dominance", "Co-evolving intelligence with humanity"], answer: 3},
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 10;
+
+    function startQuiz() {
+      document.querySelector('.start-page').classList.remove('active');
+      document.querySelector('.quiz-page').classList.add('active');
+      currentQuestion = 0;
+      score = 0;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      timeLeft = 10;
+      document.getElementById('answer').style.display = 'none';
+      document.getElementById('showAnswerBtn').style.display = 'none';
+      const q = quizData[currentQuestion];
+      document.getElementById('question').innerHTML = `<strong>${currentQuestion+1}️⃣ ${q.q}</strong>`;
+      const optionsDiv = document.getElementById('options');
+      optionsDiv.innerHTML = '';
+      q.options.forEach((opt, index) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.textContent = opt;
+        div.onclick = () => selectOption(index);
+        optionsDiv.appendChild(div);
+      });
+      updateProgress();
+      startTimer();
+    }
+
+    function startTimer() {
+      document.getElementById('timer').textContent = `Time Left: ${timeLeft}s`;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = `Time Left: ${timeLeft}s`;
+        if(timeLeft <= 0) {
+          clearInterval(timerInterval);
+          showAnswer();
+        }
+      }, 1000);
+    }
+
+    function selectOption(index) {
+      if(index === quizData[currentQuestion].answer) score++;
+      clearInterval(timerInterval);
+      showAnswer();
+    }
+
+    function showAnswer() {
+      const ansIndex = quizData[currentQuestion].answer;
+      document.getElementById('answer').style.display = 'block';
+      document.getElementById('answer').textContent = `Answer: ${quizData[currentQuestion].options[ansIndex]}`;
+      document.getElementById('showAnswerBtn').style.display = 'none';
+      setTimeout(nextQuestion, 2000);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if(currentQuestion < quizData.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.querySelector('.quiz-page').classList.remove('active');
+      document.querySelector('.result-page').classList.add('active');
+      document.getElementById('score').textContent = score;
+    }
+
+    function restartQuiz() {
+      document.querySelector('.result-page').classList.remove('active');
+      document.querySelector('.start-page').classList.add('active');
+    }
+
+    function updateProgress() {
+      const progressPercent = ((currentQuestion)/quizData.length)*100;
+      document.getElementById('progress').style.width = progressPercent + '%';
+    }
+  </script>
+</body>
+</html>
